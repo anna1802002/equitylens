@@ -1,4 +1,4 @@
-# EquityLens
+# EquityLens- An AI stock research agent 
 > Institutional-grade equity research, powered by AI.
 
 EquityLens is a full-stack AI agent that generates professional Wall Street-style analyst reports for any publicly traded company in under 2 minutes — completely free.
