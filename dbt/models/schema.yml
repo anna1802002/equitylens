@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: stg_research_reports
+    description: "Cleaned research reports"
+
+  - name: stg_watchlist  
+    description: "Cleaned watchlist items"
+
+  - name: mart_research_history
+    description: "Aggregated research history"
+
+  - name: mart_risk_analysis
+    description: "Risk analysis trends"

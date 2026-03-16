@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Environment variables - NEVER commit
+.env
+*.env
+
+# Database
+*.db
+*.sqlite3
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Vector store / data
+data/raw/
+data/processed/
+chroma_db/
+
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/.env.local
+
+# Misc
+.DS_Store
+*.log
+Thumbs.db
+*.tmp
+
+# IDEs
+.vscode/
+.idea/
+
+# Pinecone / cache
+*.pkl
+*.pickle

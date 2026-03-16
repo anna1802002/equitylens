@@ -1,0 +1,124 @@
+---
+alwaysApply: true
+---
+
+What I'm Building
+An AI-powered stock research agent that takes a ticker symbol (e.g. AAPL, NVDA, TSLA) and autonomously generates a professional analyst-grade research report in under 2 minutes.
+Problem It Solves
+Professional equity research costs $2,000–$10,000/report and takes analysts 10+ hours. This agent pulls SEC filings, live financials, and news sentiment into one structured report automatically.
+
+My Setup
+
+Windows PC (Dell laptop)
+Cursor free version
+Python already installed
+No Docker — everything runs locally with venv
+Starting from scratch
+
+
+Full Tech Stack
+
+Agent: LangGraph (multi-node StateGraph)
+Vector DB: ChromaDB (local)
+Embeddings: Sentence Transformers — all-MiniLM-L6-v2
+LLM: Groq API — llama-3.1-8b-instant (free tier)
+Data Sources: SEC Edgar EFTS API (no key), yfinance (no key), NewsAPI (free tier)
+Backend: FastAPI
+Frontend: Dash + Dash Bootstrap Components (dark blue theme, accent #60a5fa)
+Charts: Plotly Express + Graph Objects
+Cache/Storage: SQLite
+Evaluation: FinanceBench, ROUGE, custom hallucination checker
+No Docker anywhere in this project
+
+
+Folder Structure
+stock-research-agent/
+├── src/
+│   ├── agents/
+│   │   ├── graph.py          # LangGraph StateGraph definition
+│   │   ├── nodes.py          # All agent node functions
+│   │   └── state.py          # Agent state schema (Pydantic v2)
+│   ├── data/
+│   │   ├── sec_client.py     # SEC Edgar EFTS API fetcher
+│   │   ├── finance_client.py # yfinance wrapper
+│   │   ├── news_client.py    # NewsAPI fetcher
+│   │   └── normalizer.py     # Pydantic v2 data models
+│   ├── rag/
+│   │   ├── embedder.py       # Sentence Transformer embeddings
+│   │   ├── vector_store.py   # ChromaDB operations
+│   │   └── retriever.py      # Semantic search + reranking
+│   ├── evaluation/
+│   │   ├── benchmarks.py     # FinanceBench runner
+│   │   ├── hallucination.py  # Number fact-checker vs yfinance
+│   │   └── metrics.py        # ROUGE, accuracy scores
+│   └── api/
+│       ├── main.py           # FastAPI app
+│       └── routes.py         # /research, /reports, /eval endpoints
+├── dashboard/
+│   ├── app.py                # Dash entry point
+│   ├── layout.py             # Navbar + main layout
+│   ├── callbacks.py          # All Dash callbacks
+│   └── pages/
+│       ├── research.py       # Page 1 — ticker search + report
+│       ├── financials.py     # Page 2 — price + KPI charts
+│       ├── sentiment.py      # Page 3 — news sentiment timeline
+│       ├── history.py        # Page 4 — past reports table
+│       └── eval.py           # Page 5 — benchmark metrics
+├── data/
+│   ├── raw/                  # Cached SEC filings, news JSON
+│   ├── processed/            # Chunked text files
+│   └── reports.db            # SQLite report history + cache
+├── eval_results/             # Benchmark CSVs
+├── requirements.txt
+├── .env                      # API keys (never commit)
+├── .env.example
+└── README.md
+
+5 LangGraph Agent Nodes
+
+DataFetcher — pulls SEC filing, yfinance data, news in parallel
+RAGRetriever — chunks + embeds filing, retrieves top-K relevant sections
+SentimentAnalyzer — scores news sentiment per article, aggregates
+FinancialAnalyzer — calculates derived metrics, trend direction, risk flags
+ReportGenerator — Groq LLM generates structured report with Risk Score (0–100), KPI Summary, News Sentiment, Risk Factors, Analyst Verdict, Buy/Hold/Sell signal
+
+
+5 Dash Dashboard Pages
+
+Page 1 — Research: Ticker search, risk gauge, KPI cards, full LLM report, Buy/Hold/Sell badge
+Page 2 — Financials: Candlestick chart, revenue bars, margin trend, P/E vs sector
+Page 3 — Sentiment: Sentiment timeline, positive/negative breakdown, top headlines
+Page 4 — History: SQLite-backed report table, risk score comparison, CSV export
+Page 5 — Eval Metrics: FinanceBench accuracy, hallucination rate, ROUGE-L vs baseline
+
+
+All API Keys Needed
+
+GROQ_API_KEY — free at console.groq.com
+NEWS_API_KEY — free at newsapi.org
+SEC Edgar and yfinance require no keys
+
+
+Build Phases
+PhaseWhat to BuildFiles1Project scaffold + data ingestion clientsrequirements.txt, .env.example, sec_client.py, finance_client.py, news_client.py, normalizer.py2RAG pipelineembedder.py, vector_store.py, retriever.py3LangGraph agentstate.py, nodes.py, graph.py4Evaluation frameworkbenchmarks.py, hallucination.py, metrics.py5FastAPI backendmain.py, routes.py6Dash dashboard — all 5 pagesapp.py, layout.py, callbacks.py, all pages/ files
+
+Coding Rules — Always Follow
+
+Python 3.11, type hints everywhere
+Pydantic v2 models for all data schemas
+Proper try/except with informative error messages
+Clean, well-commented code, PEP8 formatting
+No Docker anywhere
+Always use Windows-compatible terminal commands
+One file at a time — build it fully before moving to the next
+Every file must have a docstring explaining what it does
+Never use placeholder or TODO comments — always write real working code
+
+
+How to Work With Me
+
+I will tell you which file to build next
+Build one complete, working file at a time
+After each file, tell me exactly how to test it in the terminal
+When I paste an error, fix it without rewriting everything else
+Always remind me which phase I'm on and what file comes next after we finish one
