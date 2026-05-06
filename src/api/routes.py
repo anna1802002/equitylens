@@ -28,6 +28,7 @@ from fastapi.responses import JSONResponse
 from src.agents.graph import compiled_graph
 from src.agents.state import AgentState
 from src.cache.redis_client import CacheKeys, CacheTTL, cache
+from src.agents.committee import CommitteeInput, run_committee
 from src.data.compare_client import compare_tickers
 from src.data.finance_client import (
     FinanceClientError,
@@ -39,6 +40,7 @@ from src.data.finance_client import (
 from src.data.coach_client import chat_with_coach
 from src.data.sentiment_client import fetch_sentiment_analysis
 from src.api.limiter import limiter
+from src.data.knowledge_graph import upsert_company_sector
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -284,6 +286,7 @@ async def get_financials(
     request: Request,
     ticker: str = Query(..., min_length=1, description="Ticker symbol, e.g. AAPL"),
     period: str = Query("1Y", description="Chart period: 1D, 1W, 1M, 3M, 6M, 1Y"),
+    as_of: str | None = Query(None, description="Optional point-in-time cutoff (ISO datetime)"),
 ) -> dict:
     """Fetch extended financial data for a ticker (Yahoo Finance style)."""
     resolved = ticker.strip().upper()
@@ -292,7 +295,7 @@ async def get_financials(
     except ValueError:
         pass
     try:
-        data = fetch_financials_extended(resolved, period=period)
+        data = fetch_financials_extended(resolved, period=period, as_of=as_of)
         return data
     except FinanceClientError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -344,6 +347,46 @@ async def get_sentiment(
         return fetch_sentiment_analysis(resolved)
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/committee")
+@limiter.limit("10/minute")
+async def run_investment_committee(
+    request: Request,
+    ticker: str = Query(..., min_length=1, description="Ticker symbol, e.g. AAPL"),
+) -> dict:
+    """Run a portfolio-style investment committee summary."""
+    resolved = ticker.strip().upper()
+    try:
+        resolved = resolve_ticker(ticker)
+    except ValueError:
+        pass
+
+    financials = fetch_financials(resolved)
+    sentiment = fetch_sentiment_analysis(resolved)
+    profile = fetch_company_profile(resolved)
+
+    # Optional graph write for portfolio/demo data lineage.
+    try:
+        upsert_company_sector(resolved, profile.get("sector"))
+        graph_status = "updated"
+    except Exception as exc:
+        graph_status = f"skipped ({exc})"
+
+    committee_input = CommitteeInput(
+        ticker=resolved,
+        recommendation="HOLD",
+        risk_score=50.0,
+        sentiment_score=float(sentiment.get("overall_score", 0.0)),
+        pe_ratio=financials.pe_ratio,
+        profit_margin=financials.profit_margin,
+    )
+    committee = run_committee(committee_input)
+    return {
+        "ticker": resolved,
+        "committee": committee,
+        "graph_status": graph_status,
+    }
 
 
 def _project_root() -> Path:

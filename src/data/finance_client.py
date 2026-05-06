@@ -535,7 +535,7 @@ def fetch_company_profile(ticker: str) -> dict:
 
 
 def fetch_financials_extended(
-    ticker: str, period: str = "1y"
+    ticker: str, period: str = "1y", as_of: str | None = None
 ) -> dict:
     """Fetch extended financial data for the financials page (Yahoo Finance style).
 
@@ -553,6 +553,12 @@ def fetch_financials_extended(
         raise FinanceClientError("Ticker symbol must be a non-empty string.")
 
     symbol = ticker.upper().strip()
+    cutoff = None
+    if as_of:
+        try:
+            cutoff = pd.to_datetime(as_of, utc=True)
+        except Exception as exc:
+            raise FinanceClientError(f"Invalid as_of value '{as_of}': {exc}") from exc
 
     try:
         import yfinance as yf
@@ -607,6 +613,11 @@ def fetch_financials_extended(
                 "close": float(row.get("Close", 0)) if pd.notna(row.get("Close")) else None,
                 "volume": int(row.get("Volume", 0)) if pd.notna(row.get("Volume")) else None,
             })
+
+    if cutoff is not None:
+        price_history = [
+            row for row in price_history if pd.to_datetime(row["date"], utc=True) <= cutoff
+        ]
 
     # Current session OHLC (regular market)
     current_price = _safe_get(
@@ -705,5 +716,6 @@ def fetch_financials_extended(
         "regular_market_change": chg,
         "regular_market_change_percent": chg_pct,
         "market_state": info.get("marketState") or "UNKNOWN",
+        "as_of_applied": as_of,
     }
 

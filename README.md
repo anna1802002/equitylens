@@ -22,10 +22,13 @@ Type any company name or ticker and get:
 | Technology | Purpose |
 |---|---|
 | LangGraph | Multi-node agentic orchestration |
+| AutoGen | Investment committee role simulation (bull/bear/risk) |
 | FinBERT (ProsusAI) | Domain-specific financial embeddings |
 | Pinecone | Production vector database |
+| Qdrant | Optional alternative vector store |
 | Groq / Llama 3.1 | Fast LLM inference |
 | LangSmith | Agent observability & tracing |
+| vectorbt | Strategy backtesting |
 | RAG Pipeline | SEC 10-K/10-Q semantic retrieval |
 | FinanceBench | LLM evaluation framework |
 
@@ -34,6 +37,7 @@ Type any company name or ticker and get:
 |---|---|
 | FastAPI | Async REST API + WebSockets |
 | Python 3.11 | Core language |
+| Neo4j | Company-sector relationship graph |
 | Upstash Redis | 24-hour financial data caching |
 | SQLite | Report history storage |
 | dbt Core | Data transformation & lineage |
@@ -127,8 +131,9 @@ SEC_USER_AGENT=EquityLens/1.0 your@email.com
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | /api/research | Run full research agent |
-| GET | /api/financials | Get financial data |
+| GET | /api/financials | Get financial data (supports `as_of` point-in-time cutoff) |
 | GET | /api/sentiment | Get sentiment analysis |
+| GET | /api/committee | Run bull/bear/risk committee verdict |
 | GET | /api/compare | Compare two stocks |
 | GET | /api/reports | Get research history |
 | GET | /api/watchlist | Get watchlist |
@@ -136,6 +141,35 @@ SEC_USER_AGENT=EquityLens/1.0 your@email.com
 | GET | /api/eval | Get benchmark results |
 | GET | /api/cache/stats | Cache statistics |
 | WS | /ws/research | WebSocket streaming |
+
+## A-Grade Engineering Upgrades
+
+- **Evaluation framework**
+  - `src/evaluation/deepeval_runner.py` for relevance + faithfulness checks
+  - deterministic fallback mode for CI when external LLM eval providers are unavailable
+- **Benchmark harness**
+  - `scripts/run_eval_benchmark.py`
+  - writes `eval_results/benchmark_summary.json`
+- **Point-in-time correctness**
+  - `/api/financials` supports `as_of` to reduce temporal leakage in analysis workflows
+- **Committee reasoning layer**
+  - `src/agents/committee.py` plus `/api/committee` endpoint
+
+## CI/CD
+
+- GitHub Actions workflow: `.github/workflows/ci.yml`
+- Runs:
+  - compile checks
+  - unit tests in `tests/`
+  - benchmark smoke run (`python scripts/run_eval_benchmark.py`)
+
+## Pre-Push Verification
+
+```bash
+python -m compileall src scripts tests
+pytest -q tests
+python scripts/run_eval_benchmark.py
+```
 
 ## Data Pipeline (dbt)raw.reports ──→ stg_research_reports ──→ mart_research_history
 ──→ mart_risk_analysis
