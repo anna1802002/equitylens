@@ -162,6 +162,7 @@ SEC_USER_AGENT=EquityLens/1.0 your@email.com
   - compile checks
   - unit tests in `tests/`
   - benchmark smoke run (`python scripts/run_eval_benchmark.py`)
+- CI dependency set: `requirements-ci.txt` (stable runner subset)
 
 ## Pre-Push Verification
 

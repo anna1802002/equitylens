@@ -6,18 +6,17 @@ are not configured in local/dev environments.
 
 from __future__ import annotations
 
-from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
-from deepeval.test_case import LLMTestCase
-
-
 def evaluate_report_quality(input_prompt: str, output_text: str, context: list[str]) -> dict:
     """Run lightweight relevance + faithfulness checks for generated reports."""
-    case = LLMTestCase(
-        input=input_prompt,
-        actual_output=output_text,
-        retrieval_context=context,
-    )
     try:
+        from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+        from deepeval.test_case import LLMTestCase
+
+        case = LLMTestCase(
+            input=input_prompt,
+            actual_output=output_text,
+            retrieval_context=context,
+        )
         relevancy = AnswerRelevancyMetric(threshold=0.6)
         faithfulness = FaithfulnessMetric(threshold=0.6)
         relevancy.measure(case)
